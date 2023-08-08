@@ -2,7 +2,7 @@
   import _ from "lodash";
 
   import Bullet from "./lib/Bullet.svelte";
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
 
   type bullet = {
     id: string;
@@ -77,6 +77,10 @@
   $: {
     console.log(week);
   }
+
+  onMount(async () => {
+    focusAndSetCaret(week[0].bullets[0].ref);
+  });
 
   function uuid() {
     return Math.random().toString(16).slice(2);

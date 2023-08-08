@@ -3,16 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "main.ts",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "vite:dev": "vite",
+    "vite:build": "vite build",
+    "vite:preview": "vite preview",
+    "svelte:check": "svelte-check --tsconfig ./tsconfig.json",
+    "electron:start": "electron .",
+    "dev": "vite build --watch"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.4.2",
     "@tsconfig/svelte": "^5.0.0",
     "autoprefixer": "^10.4.14",
+    "electron": "^25.3.2",
     "postcss": "^8.4.25",
     "prettier": "^2.8.8",
     "prettier-plugin-svelte": "^2.10.1",
