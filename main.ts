@@ -29,10 +29,10 @@ const createWindow = () => {
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
 
-  mainWindow.webContents.on('did-finish-load', () => { })
+  mainWindow.webContents.on('did-finish-load', () => {})
 
   // also check focus data date if app not reopened every day but kept open
-  mainWindow.on('focus', () => { })
+  mainWindow.on('focus', () => {})
 }
 
 // tray method

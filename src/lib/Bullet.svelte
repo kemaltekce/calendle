@@ -83,6 +83,13 @@
           bulletStyle: bullet.style,
           bulletText: bullet.text,
         })
+      } else if (e.key === 'o') {
+        dispatch('addBullet', {
+          bulletID: bullet.id,
+          bulletStyle: bullet.style,
+          bulletText: '',
+        })
+        editMode = true
       }
     }
 

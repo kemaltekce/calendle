@@ -9,6 +9,7 @@
     "vite:build": "vite build",
     "vite:preview": "vite preview",
     "svelte:check": "svelte-check --tsconfig ./tsconfig.json",
+    "format": "prettier --write  --plugin prettier-plugin-svelte .",
     "electron:start": "electron .",
     "dev": "vite build --watch"
   },
