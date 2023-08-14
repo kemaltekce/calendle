@@ -138,7 +138,7 @@
   <div
     role="textbox"
     tabindex="0"
-    class="px-1 rounded"
+    class="px-1 rounded flex-1"
     class:line-through={bulletStyle[bullet.style].crossed}
     class:decoration-2={bulletStyle[bullet.style].crossed}
     class:caret-[#55555500]={!editMode}

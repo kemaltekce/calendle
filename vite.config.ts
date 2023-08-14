@@ -26,8 +26,8 @@ export default defineConfig({
           electronProcess = null
         }
         //additionally, watch electrons main and preload files
-        this.addWatchFile(resolve(__dirname, 'main.ts'))
-        this.addWatchFile(resolve(__dirname, 'preload.ts'))
+        this.addWatchFile(resolve(__dirname, 'main.cjs'))
+        this.addWatchFile(resolve(__dirname, 'preload.cjs'))
       },
     },
     {

@@ -1,8 +1,9 @@
 <script lang="ts">
   import _ from 'lodash'
+  import dayjs from 'dayjs'
 
   import Bullet from './lib/Bullet.svelte'
-  import { onMount, tick } from 'svelte'
+  import { afterUpdate, tick } from 'svelte'
 
   type bullet = {
     id: string
@@ -11,77 +12,53 @@
     ref: HTMLElement
   }
   let bulletClipBoard: { style: string; text: string } = null
-  let week: { name: string; date: string; bullets: bullet[] }[] = [
-    {
-      name: 'Monday',
-      date: 'Jan 01',
-      bullets: [
-        {
-          id: '123lkj',
-          style: 'todo',
-          text: 'asdf asdf asdf asdf asdaf asdf asdf asdf asdf sadf',
-          ref: null,
-        },
-        { id: '123lkjasdf', style: 'done', text: 'asdf sadf', ref: null },
-        {
-          id: '123lkjqwe',
-          style: 'migrate',
-          text: 'asdf sadf asdf asdf',
-          ref: null,
-        },
-        { id: '123lkjjhl', style: 'focus', text: 'sadf', ref: null },
-        { id: '123lkasdj', style: 'doneUnfinished', text: 'asdf', ref: null },
-        { id: '123lk45j', style: 'note', text: 'asdf', ref: null },
-        { id: '123lkjop', style: 'someday', text: 'asdf', ref: null },
-      ],
-    },
-    {
-      name: 'Tuesday',
-      date: 'Jan 02',
-      bullets: [{ id: '123lkjbl', style: 'todo', text: 'asdf', ref: null }],
-    },
-    {
-      name: 'Wednesday',
-      date: 'Jan 03',
-      bullets: [{ id: '123ld9djkj', style: 'todo', text: 'asdf', ref: null }],
-    },
-    {
-      name: 'Thursday',
-      date: 'Jan 04',
-      bullets: [{ id: '123lkjoi3', style: 'todo', text: 'asdf', ref: null }],
-    },
-    {
-      name: 'Friday',
-      date: 'Jan 05',
-      bullets: [
-        { id: '123lkjndj234', style: 'todo', text: 'asdf', ref: null },
-      ],
-    },
-    {
-      name: 'Saturday',
-      date: 'Jan 06',
-      bullets: [{ id: '1adsf23lkj', style: 'todo', text: 'asdf', ref: null }],
-    },
-    {
-      name: 'Sunday',
-      date: 'Jan 07',
-      bullets: [{ id: '12ölkj3lkj', style: 'todo', text: 'asdf', ref: null }],
-    },
-    {
-      name: 'someday',
-      date: null,
-      bullets: [{ id: '12oiumn', style: 'todo', text: 'lkj', ref: null }],
-    },
-  ]
+  let week: { name: string; date: string; bullets: bullet[] }[] = []
+  let previousWeek: { name: string; date: string; bullets: bullet[] }[] = []
   let editMode: boolean = true
+  let dateStartOfWeek: any = ''
+  let year: string = ''
+  let month: string = ''
 
-  // TODO send changes to backend and save there
-  $: {
+  window.api.onSendData(async (data) => {
+    console.log(data)
+    data.forEach((day) => {
+      day.bullets.forEach((bullet) => {
+        bullet.ref = null
+      })
+    })
+    week = JSON.parse(JSON.stringify(data))
+    dateStartOfWeek = dayjs(data[0].date)
+    year = dateStartOfWeek.format('YYYY')
+    month = dateStartOfWeek.format('MMMM')
+    await tick()
     console.log(week)
+    focusAndSetCaret(week[0].bullets[0].ref)
+  })
+
+  function loadWeek(date: string) {
+    window.api.loadData(date)
   }
 
-  onMount(async () => {
-    focusAndSetCaret(week[0].bullets[0].ref)
+  // somehow we can't track the previous week data to compare the previous
+  // week data to the current week data (previous week data = before change
+  // data & current week data = changed data). Therefore we have to send
+  // the whole week including all weekdays and someady to the backend and
+  // save the week data and someday data at the same time even if one of them
+  // didn't changed.
+  // additoinally, we can't use the reactive prompt $: because binded objects
+  // will trigger the reactivity twice. With after update we can reduce the
+  // triggered update to one
+  afterUpdate(() => {
+    if (week.length > 0) {
+      // create copy of week object
+      let backendReadyData = JSON.parse(JSON.stringify(week))
+      backendReadyData.forEach(function (day) {
+        day.bullets.forEach(function (bullet) {
+          delete bullet.ref
+        })
+      })
+      window.api.saveData(backendReadyData)
+    }
   })
 
   function uuid() {
@@ -116,7 +93,6 @@
   }
 
   async function addBullet(event: any, weekIndex: number) {
-    console.log(weekIndex)
     const previousBullet: string = event.detail.bulletID
     const defaultBullet: bullet = {
       id: uuid(),
@@ -320,7 +296,6 @@
       style: event.detail.bulletStyle,
       text: event.detail.bulletText,
     }
-    console.log(bulletClipBoard)
   }
 </script>
 
@@ -330,10 +305,25 @@
     justify-between bg-[#f0f0f0]"
   >
     <div class="pl-3">calendle</div>
-    <div>January/2023</div>
+    <div>{month + '/' + year}</div>
     <div class="flex gap-x-3 pr-3">
-      <div class="px-1">#</div>
-      <div class="px-1">#</div>
+      <button
+        class="px-1"
+        on:click={() =>
+          loadWeek(dayjs().startOf('isoWeek').format('YYYY-MM-DD'))}>T</button
+      >
+      <button
+        class="px-1"
+        on:click={() =>
+          loadWeek(dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD'))}
+        >P</button
+      >
+      <button
+        class="px-1"
+        on:click={() =>
+          loadWeek(dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD'))}
+        >N</button
+      >
     </div>
   </div>
   <div class="flex h-screen">
@@ -358,7 +348,7 @@
           "
           >
             <div class="text-xl pb-3"># someday</div>
-            {#each day.bullets as bullet (bullet.id)}
+            {#each day.bullets as bullet (bullet)}
               <Bullet
                 bind:bullet
                 bind:editMode
@@ -396,7 +386,7 @@
                 focus:
               </div>
               <div class="flex flex-col flex-1">
-                {#each day.bullets as bullet (bullet.id)}
+                {#each day.bullets as bullet (bullet)}
                   <Bullet
                     bind:bullet
                     bind:editMode

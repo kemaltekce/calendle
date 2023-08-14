@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "main.ts",
+  "main": "main.cjs",
   "scripts": {
     "vite:dev": "vite",
     "vite:build": "vite build",
@@ -29,6 +29,7 @@
     "vite": "^4.4.0"
   },
   "dependencies": {
+    "dayjs": "^1.11.9",
     "lodash": "^4.17.21"
   }
 }

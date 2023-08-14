@@ -1,0 +1,12 @@
+const { contextBridge, ipcRenderer } = require('electron')
+
+const API = {
+  onSendData: (callback) =>
+    ipcRenderer.on('on-send-data', (event, args) => {
+      callback(args)
+    }),
+  saveData: (data) => ipcRenderer.send('save-data', data),
+  loadData: (date) => ipcRenderer.send('load-data', date),
+}
+
+contextBridge.exposeInMainWorld('api', API)
