@@ -18,9 +18,12 @@
   let dateStartOfWeek: any = ''
   let year: string = ''
   let month: string = ''
+  let dateStartOfCurrentWeek: any = dayjs()
+    .startOf('isoWeek')
+    .format('YYYY-MM-DD')
+  let today: any = dayjs().format('YYYY-MM-DD')
 
   window.api.onSendData(async (data) => {
-    console.log(data)
     data.forEach((day) => {
       day.bullets.forEach((bullet) => {
         bullet.ref = null
@@ -31,7 +34,6 @@
     year = dateStartOfWeek.format('YYYY')
     month = dateStartOfWeek.format('MMMM')
     await tick()
-    console.log(week)
     focusAndSetCaret(week[0].bullets[0].ref)
   })
 
@@ -60,6 +62,11 @@
       window.api.saveData(backendReadyData)
     }
   })
+
+  function updateTodayAndStartOfWeek() {
+    dateStartOfCurrentWeek = dayjs().startOf('isoWeek').format('YYYY-MM-DD')
+    today = dayjs().format('YYYY-MM-DD')
+  }
 
   function uuid() {
     return Math.random().toString(16).slice(2)
@@ -299,6 +306,8 @@
   }
 </script>
 
+<svelte:window on:focus={updateTodayAndStartOfWeek} />
+
 <main>
   <div
     class="absolute w-full border-b-[1px] border-[#555555] p-2 text-xs flex
@@ -360,6 +369,13 @@
                 on:moveBulletUp={(e) => moveBulletUp(e, i)}
                 on:moveBulletDown={(e) => moveBulletDown(e, i)}
                 on:storeBullet={(e) => storeBullet(e)}
+                on:previousWeek={loadWeek(
+                  dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD')
+                )}
+                on:nextWeek={loadWeek(
+                  dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD')
+                )}
+                on:todayWeek={() => loadWeek(dateStartOfCurrentWeek)}
               />
             {/each}
           </div>
@@ -373,7 +389,7 @@
               <div class="pr-2 w-[20%] text-right text-[#C4C4C4] font-light">
                 weekday:
               </div>
-              <div class="">{'# ' + day.name}</div>
+              <div class:font-bold={day.date === today}>{'# ' + day.name}</div>
             </div>
             <div class="flex flex-row">
               <div class="pr-2 w-[20%] text-right text-[#C4C4C4] font-light">
@@ -398,6 +414,17 @@
                     on:moveBulletUp={(e) => moveBulletUp(e, i)}
                     on:moveBulletDown={(e) => moveBulletDown(e, i)}
                     on:storeBullet={(e) => storeBullet(e)}
+                    on:previousWeek={() =>
+                      loadWeek(
+                        dateStartOfWeek
+                          .subtract(1, 'week')
+                          .format('YYYY-MM-DD')
+                      )}
+                    on:nextWeek={() =>
+                      loadWeek(
+                        dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD')
+                      )}
+                    on:todayWeek={() => loadWeek(dateStartOfCurrentWeek)}
                   />
                 {/each}
               </div>
