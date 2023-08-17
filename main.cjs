@@ -25,13 +25,14 @@ async function createDirectory(path) {
   try {
     await fs.promises.access(path)
     console.log('Directory exists')
-  } catch (err) {
+  } catch (error) {
     console.log('Directory does not exist. Creating directory...')
     try {
       await fs.promises.mkdir(path, { recursive: true })
       console.log('Directory created successfully')
-    } catch (err) {
-      console.error('Error while creating directory:', err)
+    } catch (error) {
+      console.error('Error while creating directory:', error)
+      throw error
     }
   }
 }
@@ -40,7 +41,7 @@ async function createFile(filePath, data) {
   try {
     await fs.promises.access(filePath)
     console.log('File exists')
-  } catch (err) {
+  } catch (error) {
     console.log('File does not exist. Creating file...')
     try {
       await fs.promises.writeFile(
@@ -49,8 +50,9 @@ async function createFile(filePath, data) {
         'utf8'
       )
       console.log('File created successfully')
-    } catch (err) {
-      console.error('Error while creating file:', err)
+    } catch (error) {
+      console.error('Error while creating file:', error)
+      throw error
     }
   }
 }
@@ -67,7 +69,7 @@ async function readFile(filePath) {
     return JSON.parse(data)
   } catch (error) {
     console.error('Error reading file:', error)
-    return null
+    throw error
   }
 }
 
@@ -118,7 +120,6 @@ const createWindow = () => {
     createDirectory(dirPath)
 
     const startOfWeek = dayjs().startOf('isoWeek')
-    console.log(startOfWeek)
     const week = getDefaultWeek(startOfWeek)
     const file = getFileName(startOfWeek)
     await createFile(path.join(dirPath, file), week)
@@ -188,6 +189,11 @@ app.on('window-all-closed', () => {
 })
 
 ipcMain.on('save-data', (event, data) => {
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error(
+      'Something went wrong. The data to be saved looks weired. It is either empty or not an array.'
+    )
+  }
   const index = _.findIndex(data, function (x) {
     return x.name === 'someday'
   })

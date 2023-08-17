@@ -122,6 +122,12 @@
       dispatch('moveBulletDown', { bulletID: bullet.id })
     } else if (e.key === 'k' && e.metaKey) {
       dispatch('moveBulletUp', { bulletID: bullet.id })
+    } else if (e.key === 'h' && e.metaKey) {
+      dispatch('previousWeek')
+    } else if (e.key === 'l' && e.metaKey) {
+      dispatch('nextWeek')
+    } else if (e.key === 't' && e.metaKey) {
+      dispatch('todayWeek')
     }
   }
 </script>
