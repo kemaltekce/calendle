@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain, Menu, Tray } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain, Menu, Tray } = require('electron')
 const { join } = require('path')
 const _ = require('lodash')
 const fs = require('fs')
@@ -13,7 +13,6 @@ dayjs.extend(isoWeek)
 // global parameters
 let mainWindow
 let tray
-const dirPath = path.join(__dirname, 'data')
 const somedayFile = 'someday'
 
 function uuid() {
@@ -117,6 +116,19 @@ const createWindow = () => {
   // mainWindow.webContents.openDevTools()
 
   mainWindow.webContents.on('did-finish-load', async () => {
+    const dialogOptions = {
+      message: 'Select folder to save/read your calendle data',
+      properties: ['openDirectory'],
+    }
+    try {
+      result = await dialog.showOpenDialog(dialogOptions)
+      if (result.canceled) {
+        app.quit()
+      }
+    } catch (error) {
+      console.log(error)
+    }
+    dirPath = result.filePaths[0]
     createDirectory(dirPath)
 
     const startOfWeek = dayjs().startOf('isoWeek')
