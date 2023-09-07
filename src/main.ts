@@ -5,4 +5,10 @@ const app = new App({
   target: document.getElementById('app'),
 })
 
+declare global {
+  interface Window {
+    api?: any
+  }
+}
+
 export default app

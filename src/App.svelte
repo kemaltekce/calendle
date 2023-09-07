@@ -1,9 +1,13 @@
 <script lang="ts">
   import _ from 'lodash'
   import dayjs from 'dayjs'
+  import isoWeek from 'dayjs/plugin/isoWeek'
 
   import Bullet from './lib/Bullet.svelte'
+  import Error from './lib/Error.svelte'
   import { afterUpdate, tick } from 'svelte'
+
+  dayjs.extend(isoWeek)
 
   type bullet = {
     id: string
@@ -22,6 +26,7 @@
     .startOf('isoWeek')
     .format('YYYY-MM-DD')
   let today: any = dayjs().format('YYYY-MM-DD')
+  let errorMessage: string = ''
 
   window.api.onSendData(async (data) => {
     data.forEach((day) => {
@@ -35,6 +40,10 @@
     month = dateStartOfWeek.format('MMMM')
     await tick()
     focusAndSetCaret(week[0].bullets[0].ref)
+  })
+
+  window.api.onSendError((message) => {
+    errorMessage = message
   })
 
   function loadWeek(date: string) {
@@ -309,6 +318,7 @@
 <svelte:window on:focus={updateTodayAndStartOfWeek} />
 
 <main>
+  <Error bind:errorMessage />
   <div
     class="absolute w-full border-b-[1px] border-[#555555] p-2 text-xs flex
     justify-between bg-[#f0f0f0]"
@@ -369,12 +379,14 @@
                 on:moveBulletUp={(e) => moveBulletUp(e, i)}
                 on:moveBulletDown={(e) => moveBulletDown(e, i)}
                 on:storeBullet={(e) => storeBullet(e)}
-                on:previousWeek={loadWeek(
-                  dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD')
-                )}
-                on:nextWeek={loadWeek(
-                  dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD')
-                )}
+                on:previousWeek={() =>
+                  loadWeek(
+                    dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD')
+                  )}
+                on:nextWeek={() =>
+                  loadWeek(
+                    dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD')
+                  )}
                 on:todayWeek={() => loadWeek(dateStartOfCurrentWeek)}
               />
             {/each}

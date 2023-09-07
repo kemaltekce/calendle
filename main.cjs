@@ -30,7 +30,8 @@ async function createDirectory(path) {
       await fs.promises.mkdir(path, { recursive: true })
       console.log('Directory created successfully')
     } catch (error) {
-      console.error('Error while creating directory:', error)
+      const message = 'Error while creating directory: ' + error
+      mainWindow.webContents.send('on-send-error', message)
       throw error
     }
   }
@@ -50,7 +51,8 @@ async function createFile(filePath, data) {
       )
       console.log('File created successfully')
     } catch (error) {
-      console.error('Error while creating file:', error)
+      const message = 'Error while creating file: ' + error
+      mainWindow.webContents.send('on-send-error', message)
       throw error
     }
   }
@@ -58,7 +60,11 @@ async function createFile(filePath, data) {
 
 function saveToFile(filePath, data) {
   fs.writeFile(filePath, JSON.stringify(data, null, 2), function (error) {
-    if (error) throw error
+    if (error) {
+      const message = 'Error while writing to file: ' + error
+      mainWindow.webContents.send('on-send-error', message)
+      throw error
+    }
   })
 }
 
@@ -67,7 +73,8 @@ async function readFile(filePath) {
     const data = await fs.promises.readFile(filePath, 'utf8')
     return JSON.parse(data)
   } catch (error) {
-    console.error('Error reading file:', error)
+    const message = 'Error while reading file: ' + error
+    mainWindow.webContents.send('on-send-error', message)
     throw error
   }
 }
@@ -126,7 +133,8 @@ const createWindow = () => {
         app.quit()
       }
     } catch (error) {
-      console.log(error)
+      const message = 'Error while selecting folder: ' + error
+      mainWindow.webContents.send('on-send-error', message)
     }
     dirPath = result.filePaths[0]
     createDirectory(dirPath)
@@ -202,9 +210,11 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('save-data', (event, data) => {
   if (!Array.isArray(data) || data.length === 0) {
-    throw new Error(
+    const error =
       'Something went wrong. The data to be saved looks weired. It is either empty or not an array.'
-    )
+    const message = 'Error while saving data: ' + error
+    mainWindow.webContents.send('on-send-error', message)
+    throw new Error(error)
   }
   const index = _.findIndex(data, function (x) {
     return x.name === 'someday'
