@@ -159,9 +159,8 @@ const createWindow = () => {
 }
 
 // tray method
-// TODO add tray icon and test tray
 const createTray = () => {
-  tray = new Tray(join(__dirname, 'icons/calendle_icon.png'))
+  tray = new Tray(join(__dirname, 'icons/tray.png'))
   tray.setIgnoreDoubleClickEvents(true)
   tray.on('click', () => {
     // On macOS it's common to re-create a window in the app when the

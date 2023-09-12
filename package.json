@@ -11,9 +11,31 @@
     "svelte:check": "svelte-check --tsconfig ./tsconfig.json",
     "format": "prettier --write  --plugin prettier-plugin-svelte .",
     "electron:start": "electron .",
-    "dev": "vite build --watch"
+    "dev": "vite build --watch",
+    "forge:start": "electron-forge start",
+    "forge:package": "electron-forge package",
+    "forge:make": "electron-forge make"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "icon": "icons/icon"
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-dmg",
+          "config": {
+            "background": "icons/dmg_background.png",
+            "icon": "icons/icon.icns",
+            "format": "ULFO"
+          }
+        }
+      ]
+    }
   },
   "devDependencies": {
+    "@electron-forge/cli": "^6.4.2",
+    "@electron-forge/maker-dmg": "^6.4.2",
     "@sveltejs/vite-plugin-svelte": "^2.4.2",
     "@tsconfig/svelte": "^5.0.0",
     "autoprefixer": "^10.4.14",
