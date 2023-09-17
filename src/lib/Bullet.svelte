@@ -5,7 +5,7 @@
 
   export let bullet: bullet
   export let editMode: boolean
-  export let bulletClipBoard: { style: string; text: string }
+  export let bulletClipBoard: { style: string; text: string; indent: boolean }
 
   const dispatch = createEventDispatcher()
 
@@ -13,6 +13,7 @@
     id: string
     style: string
     text: string
+    indent: boolean
     ref: HTMLElement
   }
   type style = {
@@ -59,6 +60,14 @@
     bullet.style = bulletPriority[nextBulletStyleIndex]
   }
 
+  function indentBullet() {
+    bullet.indent = true
+  }
+
+  function unindentBullet() {
+    bullet.indent = false
+  }
+
   function onKeyDown(e: KeyboardEvent) {
     if (!editMode) {
       e.preventDefault()
@@ -70,6 +79,7 @@
         dispatch('storeBullet', {
           bulletStyle: bullet.style,
           bulletText: bullet.text,
+          bulletIndent: bullet.indent,
         })
         dispatch('removeBullet', { bulletID: bullet.id, removeSingle: true })
       } else if (e.key === 'p') {
@@ -77,19 +87,26 @@
           bulletID: bullet.id,
           bulletStyle: bulletClipBoard.style,
           bulletText: bulletClipBoard.text,
+          bulletIndent: bulletClipBoard.indent,
         })
       } else if (e.key === 'y') {
         dispatch('storeBullet', {
           bulletStyle: bullet.style,
           bulletText: bullet.text,
+          bulletIndent: bullet.indent,
         })
       } else if (e.key === 'o') {
         dispatch('addBullet', {
           bulletID: bullet.id,
           bulletStyle: bullet.style,
           bulletText: '',
+          bulletIndent: bullet.indent,
         })
         editMode = true
+      } else if (e.key === '<') {
+        unindentBullet()
+      } else if (e.key === '>') {
+        indentBullet()
       }
     }
 
@@ -102,9 +119,14 @@
         bulletID: bullet.id,
         bulletStyle: bullet.style,
         bulletText: '',
+        bulletIndent: bullet.indent,
       })
     } else if (e.key === 'Backspace') {
       if (bullet.text.length === 0) {
+        if (bullet.indent) {
+          bullet.indent = false
+          return
+        }
         e.preventDefault()
         dispatch('removeBullet', { bulletID: bullet.id, removeSingle: false })
       }
@@ -128,6 +150,12 @@
       dispatch('nextWeek')
     } else if (e.key === 't' && e.metaKey) {
       dispatch('todayWeek')
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      e.preventDefault()
+      unindentBullet()
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      indentBullet()
     }
   }
 </script>
@@ -136,6 +164,9 @@
   class="flex flex-row gap-2 items-start
     {bulletStyle[bullet.style].grey ? 'text-[#C4C4C4]' : ''}"
 >
+  {#if bullet.indent}
+    <div class="w-[1rem]" />
+  {/if}
   <button
     contenteditable="false"
     bind:innerHTML={bulletStyle[bullet.style].icon}
@@ -148,7 +179,7 @@
     class:line-through={bulletStyle[bullet.style].crossed}
     class:decoration-2={bulletStyle[bullet.style].crossed}
     class:caret-[#55555500]={!editMode}
-    class:focus:bg-gray-300={!editMode}
+    class:focus:bg-[#C4C4C450]={!editMode}
     contenteditable="true"
     bind:innerText={bullet.text}
     bind:this={bullet.ref}

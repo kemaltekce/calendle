@@ -86,7 +86,7 @@ function getDefaultWeek(date) {
     let day = {
       name: '',
       date: '',
-      bullets: [{ id: uuid(), style: 'todo', text: '' }],
+      bullets: [{ id: uuid(), style: 'todo', text: '', indent: false }],
     }
     day['name'] = currentDate.format('dddd')
     day['date'] = currentDate.format('YYYY-MM-DD')
@@ -147,7 +147,7 @@ const createWindow = () => {
     const somedayDefaultData = {
       name: 'someday',
       date: null,
-      bullets: [{ id: uuid(), style: 'todo', text: '' }],
+      bullets: [{ id: uuid(), style: 'todo', text: '', indent: false }],
     }
     await createFile(path.join(dirPath, somedayFile), somedayDefaultData)
 
