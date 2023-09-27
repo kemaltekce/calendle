@@ -333,21 +333,29 @@
     <div>{month + '/' + year}</div>
     <div class="flex gap-x-3 pr-3">
       <button
+        title="today"
         class="px-1"
         on:click={() =>
           loadWeek(dayjs().startOf('isoWeek').format('YYYY-MM-DD'))}>T</button
       >
       <button
+        title="previous week"
         class="px-1"
         on:click={() =>
           loadWeek(dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD'))}
         >P</button
       >
       <button
+        title="next week"
         class="px-1"
         on:click={() =>
           loadWeek(dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD'))}
         >N</button
+      >
+      <button
+        title="switch"
+        class="px-1"
+        on:click={() => window.api.relaunch()}>S</button
       >
     </div>
   </div>
@@ -394,6 +402,7 @@
                     dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD')
                   )}
                 on:todayWeek={() => loadWeek(dateStartOfCurrentWeek)}
+                on:relaunch={() => window.api.relaunch()}
               />
             {/each}
           </div>
@@ -443,6 +452,7 @@
                         dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD')
                       )}
                     on:todayWeek={() => loadWeek(dateStartOfCurrentWeek)}
+                    on:relaunch={() => window.api.relaunch()}
                   />
                 {/each}
               </div>

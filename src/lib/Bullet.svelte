@@ -95,7 +95,7 @@
           bulletText: bullet.text,
           bulletIndent: bullet.indent,
         })
-      } else if (e.key === 'o') {
+      } else if (e.key === 'o' && !e.metaKey) {
         dispatch('addBullet', {
           bulletID: bullet.id,
           bulletStyle: bullet.style,
@@ -150,6 +150,8 @@
       dispatch('nextWeek')
     } else if (e.key === 't' && e.metaKey) {
       dispatch('todayWeek')
+    } else if (e.key === 'o' && e.metaKey) {
+      dispatch('relaunch')
     } else if (e.key === 'Tab' && e.shiftKey) {
       e.preventDefault()
       unindentBullet()

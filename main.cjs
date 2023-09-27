@@ -236,3 +236,8 @@ ipcMain.on('load-data', async (event, date) => {
   data.push(somedayData)
   mainWindow.webContents.send('on-send-data', data)
 })
+
+ipcMain.on('relaunch', async (event) => {
+  app.relaunch()
+  app.quit()
+})
