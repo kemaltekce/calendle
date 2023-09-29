@@ -95,6 +95,10 @@
           bulletText: bullet.text,
           bulletIndent: bullet.indent,
         })
+      } else if (e.key === 'g') {
+        dispatch('focusFirstBullet')
+      } else if (e.key === 'G') {
+        dispatch('focusLastBullet')
       } else if (e.key === 'o' && !e.metaKey) {
         dispatch('addBullet', {
           bulletID: bullet.id,
@@ -179,8 +183,8 @@
     tabindex="0"
     class="px-1 rounded flex-1"
     class:line-through={bulletStyle[bullet.style].crossed}
-    class:decoration-2={bulletStyle[bullet.style].crossed}
-    class:caret-[#55555500]={!editMode}
+    class:decoration-1={bulletStyle[bullet.style].crossed}
+    class:caret-[#33333300]={!editMode}
     class:focus:bg-[#C4C4C450]={!editMode}
     contenteditable="true"
     bind:innerText={bullet.text}
