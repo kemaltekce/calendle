@@ -5,7 +5,10 @@
 
   export let bullet: bullet
   export let editMode: boolean
+  export let includingBullets: number
+  export let maxIncludeBullets: number
   export let bulletClipBoard: { style: string; text: string; indent: boolean }
+  export let highlight: boolean
 
   const dispatch = createEventDispatcher()
 
@@ -47,6 +50,7 @@
     'someday',
     'note',
   ]
+  let isFocused: boolean = false
 
   function uuid() {
     return Math.random().toString(16).slice(2)
@@ -76,6 +80,10 @@
       } else if (e.key === 'k' && !e.metaKey) {
         dispatch('moveUp', { bulletID: bullet.id })
       } else if (e.key === 'd') {
+        if (includingBullets > 0) {
+          dispatch('displayEscHint')
+          return
+        }
         dispatch('storeBullet', {
           bulletStyle: bullet.style,
           bulletText: bullet.text,
@@ -83,6 +91,10 @@
         })
         dispatch('removeBullet', { bulletID: bullet.id, removeSingle: true })
       } else if (e.key === 'p') {
+        if (includingBullets > 0) {
+          dispatch('displayEscHint')
+          return
+        }
         dispatch('addBullet', {
           bulletID: bullet.id,
           bulletStyle: bulletClipBoard.style,
@@ -90,6 +102,10 @@
           bulletIndent: bulletClipBoard.indent,
         })
       } else if (e.key === 'y') {
+        if (includingBullets > 0) {
+          dispatch('displayEscHint')
+          return
+        }
         dispatch('storeBullet', {
           bulletStyle: bullet.style,
           bulletText: bullet.text,
@@ -107,10 +123,22 @@
           bulletIndent: bullet.indent,
         })
         editMode = true
+        includingBullets = 0
       } else if (e.key === '<') {
+        if (includingBullets > 0) {
+          dispatch('displayEscHint')
+          return
+        }
         unindentBullet()
       } else if (e.key === '>') {
+        if (includingBullets > 0) {
+          dispatch('displayEscHint')
+          return
+        }
         indentBullet()
+      } else if (isFinite(Number(e.key))) {
+        const temp: string = String(includingBullets)
+        includingBullets = Math.min(Number(temp + e.key), maxIncludeBullets)
       }
     }
 
@@ -142,8 +170,11 @@
       dispatch('moveDown', { bulletID: bullet.id })
     } else if (e.key === 'Escape') {
       editMode = false
+      includingBullets = 0
+      dispatch('disableEscHint')
     } else if (e.key === 'i' || e.key === 'a') {
       editMode = true
+      includingBullets = 0
     } else if (e.key === 'j' && e.metaKey) {
       dispatch('moveBulletDown', { bulletID: bullet.id })
     } else if (e.key === 'k' && e.metaKey) {
@@ -175,6 +206,7 @@
   {/if}
   <button
     contenteditable="false"
+    class:hidden={!isFocused && bullet.text == '---' && !highlight}
     bind:innerHTML={bulletStyle[bullet.style].icon}
     on:click={() => iterateStyle()}
   />
@@ -186,10 +218,24 @@
     class:decoration-1={bulletStyle[bullet.style].crossed}
     class:caret-[#33333300]={!editMode}
     class:focus:bg-[#C4C4C450]={!editMode}
+    class:text-[#00000000]={!isFocused && bullet.text == '---' && !highlight}
+    class:bg-[#C4C4C4]={!isFocused && bullet.text == '---' && !highlight}
+    class:h-[2px]={!isFocused && bullet.text == '---' && !highlight}
+    class:my-[11px]={!isFocused && bullet.text == '---' && !highlight}
+    class:self-center={!isFocused && bullet.text == '---' && !highlight}
+    class:bg-[#C4C4C450]={highlight}
     contenteditable="true"
     bind:innerText={bullet.text}
     bind:this={bullet.ref}
     on:keydown={(event) => onKeyDown(event)}
+    on:focus={() => {
+      isFocused = true
+      includingBullets = Math.min(includingBullets, maxIncludeBullets)
+      dispatch('focusedBullet')
+    }}
+    on:blur={() => {
+      isFocused = false
+    }}
   />
 </div>
 

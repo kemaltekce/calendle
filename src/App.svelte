@@ -20,6 +20,7 @@
   let week: { name: string; date: string; bullets: bullet[] }[] = []
   let previousWeek: { name: string; date: string; bullets: bullet[] }[] = []
   let editMode: boolean = true
+  let includingBullets: number = 0
   let dateStartOfWeek: any = ''
   let year: string = ''
   let month: string = ''
@@ -29,6 +30,10 @@
   let today: any = dayjs().format('YYYY-MM-DD')
   let errorMessage: string = ''
   let changeStyle: boolean = false
+  let colorStyle: number = 3
+  let focusedWeekIndex: number = undefined
+  let focusedBulletIndex: number = undefined
+  let displayEscHint: boolean = false
 
   window.api.onSendData(async (data) => {
     data.forEach((day) => {
@@ -232,19 +237,6 @@
     }
   }
 
-  // function getAmountOfNextIndentedBullets(
-  //   bulletIndex: number,
-  //   bullets: bullet[]
-  // ) {
-  //   const nextNotIndent: number = _.findIndex(bullets.slice(bulletIndex + 1), {
-  //     indent: false,
-  //   })
-  //   if (nextNotIndent < 0) {
-  //     return bullets.length - bulletIndex - 1
-  //   }
-  //   return nextNotIndent
-  // }
-
   async function moveBulletUp(event: any, weekIndex: number) {
     let finalWeeekIndex: number
     let finalBulletIndex: number
@@ -253,8 +245,6 @@
     const bulletIndex: number = _.findIndex(bullets, function (b: bullet) {
       return b.id == event.detail.bulletID
     })
-    // TODO
-    const includingBullets: number = 0
 
     // if first bullet on monday
     if (bulletIndex === 0 && weekIndex === 0) {
@@ -295,6 +285,7 @@
     }
     await tick()
     let el: HTMLElement = week[finalWeeekIndex].bullets[finalBulletIndex].ref
+    el.blur()
     focusAndSetCaret(el)
   }
 
@@ -306,8 +297,6 @@
     const bulletIndex: number = _.findIndex(bullets, function (b: bullet) {
       return b.id == event.detail.bulletID
     })
-    // TODO
-    const includingBullets: number = 0
 
     // if last bullet in someday
     if (
@@ -353,6 +342,7 @@
     }
     await tick()
     let el: HTMLElement = week[finalWeeekIndex].bullets[finalBulletIndex].ref
+    el.blur()
     focusAndSetCaret(el)
   }
 
@@ -362,6 +352,11 @@
       text: event.detail.bulletText,
       indent: event.detail.bulletIndent,
     }
+  }
+
+  function focusedBullet(weekIndex: number, bulletIndex: number) {
+    focusedWeekIndex = weekIndex
+    focusedBulletIndex = bulletIndex
   }
 </script>
 
@@ -373,16 +368,37 @@
     class="absolute w-full border-b-[1px] border-[#333333] p-2 text-xs flex
     justify-between bg-[#f9f9f9]"
   >
+    <div class="flex flex-1 gap-x-3 pl-3">
+      <button
+        class=""
+        on:click={() => {
+          changeStyle = !changeStyle
+        }}
+      >
+        calendle
+      </button>
+      <div
+        class="w-[1rem] text-[#C4C4C4]"
+        class:invisible={includingBullets === 0}
+      >
+        {includingBullets}
+      </div>
+      <div
+        class="w-[2rem] bg-[#E5C4C4] text-center"
+        class:invisible={!displayEscHint}
+      >
+        esc
+      </div>
+    </div>
     <button
-      class="pl-3"
+      class=""
       on:click={() => {
-        changeStyle = !changeStyle
+        colorStyle = (colorStyle % 3) + 1
       }}
     >
-      calendle
+      {month + '/' + year}
     </button>
-    <div>{month + '/' + year}</div>
-    <div class="flex gap-x-3 pr-3">
+    <div class="flex flex-1 justify-end gap-x-3 pr-3">
       <button
         title="today"
         class="px-1"
@@ -414,6 +430,7 @@
     <div
       class="grow-0 w-[50px] min-[700px]:grow min-[700px]:min-w-[50px] flex
       flex-col items-end overflow-hidden pt-14"
+      class:hidden={colorStyle != 1}
     >
       <div
         class="m-2 rounded h-[40%] w-[60px] bg-[#E1E6E0]"
@@ -430,10 +447,12 @@
     </div>
     <div
       id="main"
-      class="grow min-[700px]:grow-0 min-[700px]:min-w-[600px]
-      min-[700px]:max-w-[600px] overflow-auto pt-7"
-      class:border-x-[1px]={changeStyle}
-      class:border-[#333333]={changeStyle}
+      class="grow overflow-auto pt-7"
+      class:min-[700px]:grow-0={colorStyle == 1}
+      class:min-[700px]:min-w-[600px]={colorStyle == 1}
+      class:min-[700px]:max-w-[600px]={colorStyle == 1}
+      class:border-x-[1px]={changeStyle && colorStyle == 1}
+      class:border-[#333333]={changeStyle && colorStyle == 1}
     >
       {#each week as day, i (day.name)}
         {#if day.name === 'someday'}
@@ -443,6 +462,10 @@
           "
             class:border-none={changeStyle}
             class:shadow-none={changeStyle}
+            class:!mx-7={changeStyle}
+            class:!px-0={changeStyle}
+            class:!border-none={colorStyle == 3}
+            class:!shadow-none={colorStyle == 3}
           >
             <div
               class="pb-3"
@@ -451,10 +474,15 @@
             >
               # someday
             </div>
-            {#each day.bullets as bullet (bullet)}
+            {#each day.bullets as bullet, j (bullet)}
               <Bullet
                 bind:bullet
                 bind:editMode
+                bind:includingBullets
+                maxIncludeBullets={day.bullets.length - j - 1}
+                highlight={i == focusedWeekIndex &&
+                  focusedBulletIndex < j &&
+                  j < focusedBulletIndex + includingBullets + 1}
                 {bulletClipBoard}
                 on:addBullet={(e) => addBullet(e, i)}
                 on:removeBullet={(e) => removeBullet(e, i)}
@@ -475,6 +503,9 @@
                 on:relaunch={() => window.api.relaunch()}
                 on:focusFirstBullet={() => focusFirstBullet()}
                 on:focusLastBullet={() => focusLastBullet()}
+                on:focusedBullet={() => focusedBullet(i, j)}
+                on:displayEscHint={() => (displayEscHint = true)}
+                on:disableEscHint={() => (displayEscHint = false)}
               />
             {/each}
           </div>
@@ -490,6 +521,8 @@
             class:border-b-[1px]={changeStyle}
             class:rounded-none={changeStyle}
             class:shadow-none={changeStyle}
+            class:!border-none={colorStyle == 3}
+            class:!shadow-none={colorStyle == 3}
           >
             <div
               class="flex flex-row"
@@ -498,7 +531,7 @@
               class:tracking-[0.7rem]={changeStyle}
             >
               <div
-                class="pr-2 w-[20%] text-right text-[#C4C4C4] font-light"
+                class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light"
                 class:hidden={changeStyle}
               >
                 weekday:
@@ -513,7 +546,7 @@
               class:pb-4={changeStyle}
             >
               <div
-                class="pr-2 w-[20%] text-right text-[#C4C4C4] font-light"
+                class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light"
                 class:hidden={changeStyle}
               >
                 date:
@@ -522,16 +555,21 @@
             </div>
             <div class="flex flex-row">
               <div
-                class="pr-2 w-[20%] text-right text-[#C4C4C4] font-light"
+                class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light"
                 class:hidden={changeStyle}
               >
                 focus:
               </div>
               <div class="flex flex-col flex-1">
-                {#each day.bullets as bullet (bullet)}
+                {#each day.bullets as bullet, j (bullet)}
                   <Bullet
                     bind:bullet
                     bind:editMode
+                    bind:includingBullets
+                    maxIncludeBullets={day.bullets.length - j - 1}
+                    highlight={i == focusedWeekIndex &&
+                      focusedBulletIndex < j &&
+                      j < focusedBulletIndex + includingBullets + 1}
                     {bulletClipBoard}
                     on:addBullet={(e) => addBullet(e, i)}
                     on:removeBullet={(e) => removeBullet(e, i)}
@@ -554,6 +592,9 @@
                     on:relaunch={() => window.api.relaunch()}
                     on:focusFirstBullet={() => focusFirstBullet()}
                     on:focusLastBullet={() => focusLastBullet()}
+                    on:focusedBullet={() => focusedBullet(i, j)}
+                    on:displayEscHint={() => (displayEscHint = true)}
+                    on:disableEscHint={() => (displayEscHint = false)}
                   />
                 {/each}
               </div>
@@ -565,6 +606,7 @@
     <div
       class="grow-0 w-[50px] min-[700px]:grow min-[700px]:min-w-[50px] flex
       flex-col items-start overflow-hidden pt-14"
+      class:hidden={colorStyle != 1}
     >
       <div
         class="m-2 rounded h-[30%] w-[150px] bg-[#E5C5C5]"
