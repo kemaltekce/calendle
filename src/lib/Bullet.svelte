@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher, tick } from 'svelte'
 
   import _ from 'lodash'
 
@@ -32,6 +32,7 @@
     migrate: style
     someday: style
     note: style
+    header: style
   } = {
     todo: { icon: '&#x25AA', crossed: false, grey: false },
     focus: { icon: '&#x25C6;', crossed: false, grey: false },
@@ -40,6 +41,7 @@
     migrate: { icon: '&#xbb;', crossed: true, grey: true },
     someday: { icon: '&#xab', crossed: true, grey: true },
     note: { icon: '&#8211;', crossed: false, grey: false },
+    header: { icon: '#', crossed: false, grey: false },
   }
   const bulletPriority: string[] = [
     'todo',
@@ -49,6 +51,7 @@
     'migrate',
     'someday',
     'note',
+    'header',
   ]
   let isFocused: boolean = false
 
@@ -79,6 +82,13 @@
         dispatch('moveDown', { bulletID: bullet.id })
       } else if (e.key === 'k' && !e.metaKey) {
         dispatch('moveUp', { bulletID: bullet.id })
+      } else if (e.key === 'J' && !e.metaKey && e.shiftKey) {
+        includingBullets = Math.min(includingBullets + 1, maxIncludeBullets)
+      } else if (e.key === 'K' && !e.metaKey && e.shiftKey) {
+        includingBullets = Math.max(
+          Math.min(includingBullets - 1, maxIncludeBullets),
+          0
+        )
       } else if (e.key === 'd') {
         if (includingBullets > 0) {
           dispatch('displayEscHint')
@@ -206,9 +216,10 @@
   {/if}
   <button
     contenteditable="false"
-    class:hidden={!isFocused && bullet.text == '---' && !highlight}
+    class:hidden={(!isFocused && bullet.text == '---' && !highlight) ||
+      (!isFocused && bullet.style == 'header' && !highlight)}
     bind:innerHTML={bulletStyle[bullet.style].icon}
-    on:click={() => iterateStyle()}
+    on:mousedown={() => iterateStyle()}
   />
   <div
     role="textbox"
@@ -223,18 +234,24 @@
     class:h-[2px]={!isFocused && bullet.text == '---' && !highlight}
     class:my-[11px]={!isFocused && bullet.text == '---' && !highlight}
     class:self-center={!isFocused && bullet.text == '---' && !highlight}
+    class:text-xl={!isFocused && bullet.style == 'header' && !highlight}
+    class:px-0={!isFocused && bullet.style == 'header' && !highlight}
     class:bg-[#C4C4C450]={highlight}
     contenteditable="true"
     bind:innerText={bullet.text}
     bind:this={bullet.ref}
     on:keydown={(event) => onKeyDown(event)}
-    on:focus={() => {
+    on:focus={async () => {
       isFocused = true
       includingBullets = Math.min(includingBullets, maxIncludeBullets)
+      // await tick so that after delete of a bullet the focused bullet has
+      // updated infos about position
+      await tick()
       dispatch('focusedBullet')
     }}
     on:blur={() => {
       isFocused = false
+      dispatch('blurBullet')
     }}
   />
 </div>

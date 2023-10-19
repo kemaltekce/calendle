@@ -121,6 +121,13 @@
     focusAndSetCaret(el)
   }
 
+  function focusFirstBulletIfNothingFocused(event: any) {
+    if (event.key === 'j' && focusedBulletIndex === undefined) {
+      event.preventDefault()
+      focusFirstBullet()
+    }
+  }
+
   function focusLastBullet() {
     let el: HTMLElement
     const somedayBullets: bullet[] = week[week.length - 1].bullets
@@ -358,9 +365,17 @@
     focusedWeekIndex = weekIndex
     focusedBulletIndex = bulletIndex
   }
+
+  function blurBullet() {
+    focusedWeekIndex = undefined
+    focusedBulletIndex = undefined
+  }
 </script>
 
-<svelte:window on:focus={updateTodayAndStartOfWeek} />
+<svelte:window
+  on:focus={updateTodayAndStartOfWeek}
+  on:keydown={focusFirstBulletIfNothingFocused}
+/>
 
 <main>
   <Error bind:errorMessage />
@@ -504,6 +519,7 @@
                 on:focusFirstBullet={() => focusFirstBullet()}
                 on:focusLastBullet={() => focusLastBullet()}
                 on:focusedBullet={() => focusedBullet(i, j)}
+                on:blurBullet={() => blurBullet()}
                 on:displayEscHint={() => (displayEscHint = true)}
                 on:disableEscHint={() => (displayEscHint = false)}
               />
@@ -593,6 +609,7 @@
                     on:focusFirstBullet={() => focusFirstBullet()}
                     on:focusLastBullet={() => focusLastBullet()}
                     on:focusedBullet={() => focusedBullet(i, j)}
+                    on:blurBullet={() => blurBullet()}
                     on:displayEscHint={() => (displayEscHint = true)}
                     on:disableEscHint={() => (displayEscHint = false)}
                   />
