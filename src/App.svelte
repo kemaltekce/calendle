@@ -5,6 +5,7 @@
 
   import Bullet from './lib/Bullet.svelte'
   import Error from './lib/Error.svelte'
+  import Hotkey from './lib/Hotkey.svelte'
   import { afterUpdate, tick } from 'svelte'
 
   dayjs.extend(isoWeek)
@@ -34,6 +35,7 @@
   let focusedWeekIndex: number = undefined
   let focusedBulletIndex: number = undefined
   let displayEscHint: boolean = false
+  let displayHotkey: boolean = false
 
   window.api.onSendData(async (data) => {
     data.forEach((day) => {
@@ -379,6 +381,17 @@
 
 <main>
   <Error bind:errorMessage />
+  <Hotkey bind:displayHotkey />
+  <div
+    class="absolute bottom-0 w-[30px] h-[30px] flex items-center justify-center group"
+  >
+    <button
+      class="invisible group-hover:visible text-[#C4C4C4]"
+      on:click={() => {
+        displayHotkey = true
+      }}>?</button
+    >
+  </div>
   <div
     class="absolute w-full border-b-[1px] border-[#333333] p-2 text-xs flex
     justify-between bg-[#f9f9f9]"
