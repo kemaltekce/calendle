@@ -7,7 +7,7 @@
   export let editMode: boolean
   export let includingBullets: number
   export let maxIncludeBullets: number
-  export let bulletClipBoard: { style: string; text: string; indent: boolean }
+  export let bulletClipBoard: { style: string; text: string; indent: number }
   export let highlight: boolean
 
   const dispatch = createEventDispatcher()
@@ -16,7 +16,7 @@
     id: string
     style: string
     text: string
-    indent: boolean
+    indent: number
     ref: HTMLElement
   }
   type style = {
@@ -32,6 +32,7 @@
     migrate: style
     someday: style
     note: style
+    noteGrey: style
     header: style
   } = {
     todo: { icon: '&#x25AA', crossed: false, grey: false },
@@ -41,6 +42,7 @@
     migrate: { icon: '&#xbb;', crossed: true, grey: true },
     someday: { icon: '&#xab', crossed: true, grey: true },
     note: { icon: '&#8211;', crossed: false, grey: false },
+    noteGrey: { icon: '&#8211;', crossed: false, grey: true },
     header: { icon: '#', crossed: false, grey: false },
   }
   const bulletPriority: string[] = [
@@ -51,6 +53,7 @@
     'migrate',
     'someday',
     'note',
+    'noteGrey',
     'header',
   ]
   let isFocused: boolean = false
@@ -68,11 +71,11 @@
   }
 
   function indentBullet() {
-    bullet.indent = true
+    bullet.indent = Math.min(bullet.indent + 1, 2)
   }
 
   function unindentBullet() {
-    bullet.indent = false
+    bullet.indent = Math.max(bullet.indent - 1, 0)
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -165,8 +168,8 @@
       })
     } else if (e.key === 'Backspace') {
       if (bullet.text.length === 0) {
-        if (bullet.indent) {
-          bullet.indent = false
+        if (bullet.indent > 0) {
+          unindentBullet()
           return
         }
         e.preventDefault()
@@ -211,9 +214,9 @@
   class="flex flex-row gap-2 items-start
     {bulletStyle[bullet.style].grey ? 'text-[#C4C4C4]' : ''}"
 >
-  {#if bullet.indent}
+  {#each Array(bullet.indent) as _, _}
     <div class="w-[1rem]" />
-  {/if}
+  {/each}
   <button
     contenteditable="false"
     class:hidden={(!isFocused && bullet.text == '---' && !highlight) ||

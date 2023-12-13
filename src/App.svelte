@@ -14,10 +14,10 @@
     id: string
     style: string
     text: string
-    indent: boolean
+    indent: number
     ref: HTMLElement
   }
-  let bulletClipBoard: { style: string; text: string; indent: boolean } = null
+  let bulletClipBoard: { style: string; text: string; indent: number } = null
   let week: { name: string; date: string; bullets: bullet[] }[] = []
   let previousWeek: { name: string; date: string; bullets: bullet[] }[] = []
   let editMode: boolean = true
@@ -191,7 +191,7 @@
         id: uuid(),
         style: 'todo',
         text: '',
-        indent: false,
+        indent: 0,
         ref: null,
       }
       week[weekIndex].bullets = [defaultBullet]
@@ -266,7 +266,7 @@
           id: uuid(),
           style: 'todo',
           text: '',
-          indent: false,
+          indent: 0,
           ref: null,
         }
         week[weekIndex].bullets = [defaultBullet]
@@ -321,7 +321,7 @@
           id: uuid(),
           style: 'todo',
           text: '',
-          indent: false,
+          indent: 0,
           ref: null,
         }
         week[weekIndex].bullets = [defaultBullet]

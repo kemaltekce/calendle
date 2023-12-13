@@ -86,7 +86,7 @@ function getDefaultWeek(date) {
     let day = {
       name: '',
       date: '',
-      bullets: [{ id: uuid(), style: 'todo', text: '', indent: false }],
+      bullets: [{ id: uuid(), style: 'todo', text: '', indent: 0 }],
     }
     day['name'] = currentDate.format('dddd')
     day['date'] = currentDate.format('YYYY-MM-DD')
@@ -97,6 +97,17 @@ function getDefaultWeek(date) {
 
 function getFileName(date) {
   return date.isoWeekYear() + '-' + date.isoWeek()
+}
+
+function changeIndentFromBooleanToNumber(data) {
+  data.forEach(function (weekday) {
+    if (typeof weekday.bullets[0].indent == 'boolean') {
+      weekday.bullets.forEach(function (bullet) {
+        bullet.indent = bullet.indent ? 1 : 0
+      })
+    }
+  })
+  return data
 }
 
 // menu
@@ -169,13 +180,14 @@ const createWindow = () => {
     const somedayDefaultData = {
       name: 'someday',
       date: null,
-      bullets: [{ id: uuid(), style: 'todo', text: '', indent: false }],
+      bullets: [{ id: uuid(), style: 'todo', text: '', indent: 0 }],
     }
     await createFile(path.join(dirPath, somedayFile), somedayDefaultData)
 
-    const data = await readFile(path.join(dirPath, file))
+    let data = await readFile(path.join(dirPath, file))
     const somedayData = await readFile(path.join(dirPath, somedayFile))
     data.push(somedayData)
+    data = changeIndentFromBooleanToNumber(data)
     mainWindow.webContents.send('on-send-data', data)
   })
 }
@@ -253,9 +265,10 @@ ipcMain.on('load-data', async (event, date) => {
   const file = getFileName(startOfWeek)
   await createFile(path.join(dirPath, file), week)
 
-  const data = await readFile(path.join(dirPath, file))
+  let data = await readFile(path.join(dirPath, file))
   const somedayData = await readFile(path.join(dirPath, somedayFile))
   data.push(somedayData)
+  data = changeIndentFromBooleanToNumber(data)
   mainWindow.webContents.send('on-send-data', data)
 })
 
