@@ -36,6 +36,16 @@
   let focusedBulletIndex: number = undefined
   let displayEscHint: boolean = false
   let displayHotkey: boolean = false
+  let showWeekdays: boolean = false
+  let weekday: { name: string; show: boolean; id: number }[] = [
+    { name: 'Mo', show: true, id: 0 },
+    { name: 'Tu', show: true, id: 1 },
+    { name: 'We', show: true, id: 2 },
+    { name: 'Th', show: true, id: 3 },
+    { name: 'Fr', show: true, id: 4 },
+    { name: 'Sa', show: true, id: 5 },
+    { name: 'Su', show: true, id: 6 },
+  ]
 
   window.api.onSendData(async (data) => {
     data.forEach((day) => {
@@ -117,9 +127,14 @@
     setCaret(el, -1)
   }
 
+  function firstWeekdayWithShow() {
+    const firstWithShow = weekday.find((day) => day.show)
+    return firstWithShow ? firstWithShow.id : 7
+  }
+
   function focusFirstBullet() {
     let el: HTMLElement
-    el = week[0].bullets[0].ref
+    el = week[firstWeekdayWithShow()].bullets[0].ref
     focusAndSetCaret(el)
   }
 
@@ -211,14 +226,14 @@
     if (previousBulletIndex >= 0) {
       el = week[weekIndex].bullets[previousBulletIndex].ref
       focusAndSetCaret(el)
-    } else if (weekIndex !== 0) {
-      weekIndex = weekIndex - 1
+    } else if (weekIndex !== firstWeekdayWithShow()) {
+      weekIndex = previousWeekdayID(weekIndex)
       el = week[weekIndex].bullets.slice(-1)[0].ref
       focusAndSetCaret(el)
     }
 
     // scroll to top if first bullet
-    if (weekIndex === 0 && previousBulletIndex === -1) {
+    if (weekIndex === firstWeekdayWithShow() && previousBulletIndex === -1) {
       document.getElementById('main').scrollTo(0, 0)
     }
   }
@@ -234,7 +249,7 @@
       el = week[weekIndex].bullets[previousBulletIndex].ref
       focusAndSetCaret(el)
     } else if (weekIndex !== 7) {
-      weekIndex = weekIndex + 1
+      weekIndex = nextWeekdayID(weekIndex)
       el = week[weekIndex].bullets[0].ref
       focusAndSetCaret(el)
     }
@@ -255,8 +270,8 @@
       return b.id == event.detail.bulletID
     })
 
-    // if first bullet on monday
-    if (bulletIndex === 0 && weekIndex === 0) {
+    // if first bullet on first displayed weekday
+    if (bulletIndex === 0 && weekIndex === firstWeekdayWithShow()) {
       return
       // if first bullet on any other day. move bullet to previous weekday
     } else if (bulletIndex === 0) {
@@ -273,12 +288,13 @@
       } else {
         week[weekIndex].bullets = [...bullets.slice(1 + includingBullets)]
       }
-      let bulletsWeekBefore: bullet[] = week[weekIndex - 1].bullets
-      week[weekIndex - 1].bullets = [
+      let bulletsWeekBefore: bullet[] =
+        week[previousWeekdayID(weekIndex)].bullets
+      week[previousWeekdayID(weekIndex)].bullets = [
         ...bulletsWeekBefore,
         ...bullets.slice(0, 1 + includingBullets),
       ]
-      finalWeeekIndex = weekIndex - 1
+      finalWeeekIndex = previousWeekdayID(weekIndex)
       finalBulletIndex =
         week[finalWeeekIndex].bullets.length - 1 - includingBullets
       // move bullet inside same weekday
@@ -328,12 +344,12 @@
       } else {
         week[weekIndex].bullets = [...bullets.slice(0, -1 - includingBullets)]
       }
-      let bulletsWeekAfter: bullet[] = week[weekIndex + 1].bullets
-      week[weekIndex + 1].bullets = [
+      let bulletsWeekAfter: bullet[] = week[nextWeekdayID(weekIndex)].bullets
+      week[nextWeekdayID(weekIndex)].bullets = [
         ...bullets.slice(bulletIndex, bulletIndex + 1 + includingBullets),
         ...bulletsWeekAfter,
       ]
-      finalWeeekIndex = weekIndex + 1
+      finalWeeekIndex = nextWeekdayID(weekIndex)
       finalBulletIndex = 0
       // move bullet inside same weekday
     } else {
@@ -372,6 +388,19 @@
     focusedWeekIndex = undefined
     focusedBulletIndex = undefined
   }
+
+  function nextWeekdayID(id: number) {
+    const nextWeekday = weekday.find((day) => day.id > id && day.show)
+    return nextWeekday ? nextWeekday.id : 7
+  }
+
+  function previousWeekdayID(id: number) {
+    const nextWeekday = weekday
+      .slice(0, id)
+      .reverse()
+      .find((day) => day.id < id && day.show)
+    return nextWeekday ? nextWeekday.id : 7
+  }
 </script>
 
 <svelte:window
@@ -393,66 +422,92 @@
     >
   </div>
   <div
-    class="absolute w-full border-b-[1px] border-[#333333] p-2 text-xs flex
-    justify-between bg-[#f9f9f9]"
+    class="absolute w-full border-b-[1px] border-[#333333] p-2 text-xs flex flex-col
+    bg-[#f9f9f9]"
   >
-    <div class="flex flex-1 gap-x-3 pl-3">
+    <div class="flex w-full justify-between">
+      <div class="flex flex-1 gap-x-3 pl-3">
+        <button
+          class=""
+          on:click={() => {
+            changeStyle = !changeStyle
+          }}
+        >
+          calendle
+        </button>
+        <div
+          class="w-[1rem] text-[#C4C4C4]"
+          class:invisible={includingBullets === 0}
+        >
+          {includingBullets}
+        </div>
+        <div
+          class="w-[2rem] bg-[#E5C4C4] text-center"
+          class:invisible={!displayEscHint}
+        >
+          esc
+        </div>
+      </div>
       <button
         class=""
         on:click={() => {
-          changeStyle = !changeStyle
+          colorStyle = (colorStyle % 3) + 1
         }}
       >
-        calendle
+        {month + '/' + year}
       </button>
-      <div
-        class="w-[1rem] text-[#C4C4C4]"
-        class:invisible={includingBullets === 0}
-      >
-        {includingBullets}
-      </div>
-      <div
-        class="w-[2rem] bg-[#E5C4C4] text-center"
-        class:invisible={!displayEscHint}
-      >
-        esc
+      <div class="flex flex-1 justify-end gap-x-3 pr-3">
+        <button
+          title="weekday"
+          class="px-1"
+          on:click={() => {
+            showWeekdays = !showWeekdays
+          }}
+        >
+          W
+        </button>
+        <button
+          title="today"
+          class="px-1"
+          on:click={() =>
+            loadWeek(dayjs().startOf('isoWeek').format('YYYY-MM-DD'))}
+          >T</button
+        >
+        <button
+          title="previous week"
+          class="px-1"
+          on:click={() =>
+            loadWeek(dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD'))}
+          >P</button
+        >
+        <button
+          title="next week"
+          class="px-1"
+          on:click={() =>
+            loadWeek(dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD'))}
+          >N</button
+        >
+        <button
+          title="switch"
+          class="px-1"
+          on:click={() => window.api.relaunch()}>S</button
+        >
       </div>
     </div>
-    <button
-      class=""
-      on:click={() => {
-        colorStyle = (colorStyle % 3) + 1
-      }}
-    >
-      {month + '/' + year}
-    </button>
-    <div class="flex flex-1 justify-end gap-x-3 pr-3">
-      <button
-        title="today"
-        class="px-1"
-        on:click={() =>
-          loadWeek(dayjs().startOf('isoWeek').format('YYYY-MM-DD'))}>T</button
-      >
-      <button
-        title="previous week"
-        class="px-1"
-        on:click={() =>
-          loadWeek(dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD'))}
-        >P</button
-      >
-      <button
-        title="next week"
-        class="px-1"
-        on:click={() =>
-          loadWeek(dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD'))}
-        >N</button
-      >
-      <button
-        title="switch"
-        class="px-1"
-        on:click={() => window.api.relaunch()}>S</button
-      >
-    </div>
+    {#if showWeekdays}
+      <div class="flex self-end gap-x-1 pr-3 pt-2">
+        {#each weekday as day (day.name)}
+          <button
+            class="px-1 rounded-[1px]"
+            class:bg-[#555555]={day.show}
+            class:text-[#f9f9f9]={day.show}
+            on:click={() => {
+              day.show = !day.show
+            }}>{day.name}</button
+          >
+        {/each}
+      </div>
+    {/if}
   </div>
   <div class="flex h-screen">
     <div
@@ -538,7 +593,7 @@
               />
             {/each}
           </div>
-        {:else}
+        {:else if weekday[_.findIndex( weekday, { name: day.name.slice(0, 2) } )].show}
           <div
             class="py-7 m-3 my-9 flex flex-col
           border-[#333333] rounded shadow-[0_3px_0_#333333]
