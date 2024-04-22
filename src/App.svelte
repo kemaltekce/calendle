@@ -30,7 +30,6 @@
     .format('YYYY-MM-DD')
   let today: any = dayjs().format('YYYY-MM-DD')
   let errorMessage: string = ''
-  let changeStyle: boolean = false
   let colorStyle: number = 3
   let focusedWeekIndex: number = undefined
   let focusedBulletIndex: number = undefined
@@ -422,7 +421,7 @@
     >
   </div>
   <div
-    class="absolute w-full border-b-[1px] border-[#333333] p-2 text-xs flex flex-col
+    class="absolute w-full border-b-[1px] border-[#1d1a1a] p-2 text-xs flex flex-col
     bg-[#f9f9f9]"
   >
     <div class="flex w-full justify-between">
@@ -430,10 +429,10 @@
         <button
           class=""
           on:click={() => {
-            changeStyle = !changeStyle
+            colorStyle = (colorStyle % 3) + 1
           }}
         >
-          calendle
+          {month + '/' + year}
         </button>
         <div
           class="w-[1rem] text-[#C4C4C4]"
@@ -448,14 +447,6 @@
           esc
         </div>
       </div>
-      <button
-        class=""
-        on:click={() => {
-          colorStyle = (colorStyle % 3) + 1
-        }}
-      >
-        {month + '/' + year}
-      </button>
       <div class="flex flex-1 justify-end gap-x-3 pr-3">
         <button
           title="weekday"
@@ -511,52 +502,31 @@
   </div>
   <div class="flex h-screen">
     <div
-      class="grow-0 w-[50px] min-[700px]:grow min-[700px]:min-w-[50px] flex
+      class="grow-0 w-[50px] min-[900px]:grow min-[900px]:min-w-[50px] flex
       flex-col items-end overflow-hidden pt-14"
       class:hidden={colorStyle != 1}
     >
-      <div
-        class="m-2 rounded h-[40%] w-[60px] bg-[#E1E6E0]"
-        class:hidden={changeStyle}
-      />
-      <div
-        class="m-2 rounded h-[25%] w-[150px] bg-[#E5C5C5]"
-        class:hidden={changeStyle}
-      />
-      <div
-        class="m-2 rounded h-[35%] w-[100px] bg-[#F9DFCC]"
-        class:hidden={changeStyle}
-      />
+      <div class="m-2 rounded h-[40%] w-[60px] bg-[#E1E6E0]" />
+      <div class="m-2 rounded h-[25%] w-[150px] bg-[#E5C5C5]" />
+      <div class="m-2 rounded h-[35%] w-[100px] bg-[#F9DFCC]" />
     </div>
     <div
       id="main"
       class="grow overflow-auto pt-7"
-      class:min-[700px]:grow-0={colorStyle == 1}
-      class:min-[700px]:min-w-[600px]={colorStyle == 1}
-      class:min-[700px]:max-w-[600px]={colorStyle == 1}
-      class:border-x-[1px]={changeStyle && colorStyle == 1}
-      class:border-[#333333]={changeStyle && colorStyle == 1}
+      class:min-[900px]:grow-0={colorStyle == 1}
+      class:min-[900px]:min-w-[800px]={colorStyle == 1}
+      class:min-[900px]:max-w-[800px]={colorStyle == 1}
     >
       {#each week as day, i (day.name)}
         {#if day.name === 'someday'}
           <div
             class="px-7 py-7 m-3 my-9 flex flex-col
-          border-[2px] border-[#333333] rounded shadow-[0_3px_0_#333333]
+          border-[2px] border-[#1d1a1a] rounded shadow-[0_3px_0_#1d1a1a]
           "
-            class:border-none={changeStyle}
-            class:shadow-none={changeStyle}
-            class:!mx-7={changeStyle}
-            class:!px-0={changeStyle}
             class:!border-none={colorStyle == 3}
             class:!shadow-none={colorStyle == 3}
           >
-            <div
-              class="pb-3"
-              class:text-xl={!changeStyle}
-              class:text-3xl={changeStyle}
-            >
-              # someday
-            </div>
+            <div class="pb-3 text-xl"># someday</div>
             {#each day.bullets as bullet, j (bullet)}
               <Bullet
                 bind:bullet
@@ -595,53 +565,28 @@
           </div>
         {:else if weekday[_.findIndex( weekday, { name: day.name.slice(0, 2) } )].show}
           <div
-            class="py-7 m-3 my-9 flex flex-col
-          border-[#333333] rounded shadow-[0_3px_0_#333333]
+            class="py-7 m-3 my-9 flex flex-col px-3
+          border-[#1d1a1a] rounded shadow-[0_3px_0_#1d1a1a00] border-[2px]
           "
-            class:px-3={!changeStyle}
-            class:border-[2px]={!changeStyle}
-            class:mx-7={changeStyle}
-            class:!pb-[4rem]={changeStyle}
-            class:border-b-[1px]={changeStyle}
-            class:rounded-none={changeStyle}
-            class:shadow-none={changeStyle}
             class:!border-none={colorStyle == 3}
             class:!shadow-none={colorStyle == 3}
           >
-            <div
-              class="flex flex-row"
-              class:text-3xl={changeStyle}
-              class:uppercase={changeStyle}
-              class:tracking-[0.7rem]={changeStyle}
-            >
-              <div
-                class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light"
-                class:hidden={changeStyle}
-              >
+            <div class="flex flex-row">
+              <div class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light">
                 weekday:
               </div>
               <div class:font-bold={day.date === today}>
-                {(changeStyle ? '#' : '# ') + day.name}
+                {'# ' + day.name}
               </div>
-            </div>
-            <div
-              class="flex flex-row"
-              class:text-xs={changeStyle}
-              class:pb-4={changeStyle}
-            >
-              <div
-                class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light"
-                class:hidden={changeStyle}
-              >
-                date:
-              </div>
-              <div class:text-[#C4C4C4]={changeStyle}>{day.date}</div>
             </div>
             <div class="flex flex-row">
-              <div
-                class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light"
-                class:hidden={changeStyle}
-              >
+              <div class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light">
+                date:
+              </div>
+              <div>{day.date}</div>
+            </div>
+            <div class="flex flex-row">
+              <div class="pr-2 w-[7rem] text-right text-[#C4C4C4] font-light">
                 focus:
               </div>
               <div class="flex flex-col flex-1">
@@ -689,22 +634,13 @@
       {/each}
     </div>
     <div
-      class="grow-0 w-[50px] min-[700px]:grow min-[700px]:min-w-[50px] flex
+      class="grow-0 w-[50px] min-[900px]:grow min-[900px]:min-w-[50px] flex
       flex-col items-start overflow-hidden pt-14"
       class:hidden={colorStyle != 1}
     >
-      <div
-        class="m-2 rounded h-[30%] w-[150px] bg-[#E5C5C5]"
-        class:hidden={changeStyle}
-      />
-      <div
-        class="m-2 rounded h-[20%] w-[60px] bg-[#E1E6E0]"
-        class:hidden={changeStyle}
-      />
-      <div
-        class="m-2 rounded h-[50%] w-[100px] bg-[#F9DFCC]"
-        class:hidden={changeStyle}
-      />
+      <div class="m-2 rounded h-[30%] w-[150px] bg-[#E5C5C5]" />
+      <div class="m-2 rounded h-[20%] w-[60px] bg-[#E1E6E0]" />
+      <div class="m-2 rounded h-[50%] w-[100px] bg-[#F9DFCC]" />
     </div>
   </div>
 </main>

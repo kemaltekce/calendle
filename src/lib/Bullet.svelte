@@ -230,7 +230,7 @@
     class="px-1 rounded flex-1"
     class:line-through={bulletStyle[bullet.style].crossed}
     class:decoration-1={bulletStyle[bullet.style].crossed}
-    class:caret-[#33333300]={!editMode}
+    class:caret-[#1d1a1a00]={!editMode}
     class:focus:bg-[#C4C4C450]={!editMode}
     class:text-[#00000000]={!isFocused && bullet.text == '---' && !highlight}
     class:bg-[#C4C4C4]={!isFocused && bullet.text == '---' && !highlight}
