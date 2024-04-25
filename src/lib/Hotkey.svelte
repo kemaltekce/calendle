@@ -13,6 +13,8 @@
     { key: '&#x2318;+k', description: 'move bullet up' },
     { key: '&#x2318;+h', description: 'go to previous week' },
     { key: '&#x2318;+l', description: 'go to next week' },
+    { key: 'shift+&#x2318;+h', description: 'go to previous list' },
+    { key: 'shift+&#x2318;+l', description: 'go to next list' },
     { key: '&#x2318;+t', description: 'go to current week' },
     { key: '&#x2318;+o', description: 'restart calendle' },
     { key: 'esc', description: 'activate hover mode' },

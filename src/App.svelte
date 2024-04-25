@@ -19,6 +19,9 @@
   }
   let bulletClipBoard: { style: string; text: string; indent: number } = null
   let week: { name: string; date: string; bullets: bullet[] }[] = []
+  let lists: string[] = []
+  let list: string = ''
+  let showLists: boolean = false
   let previousWeek: { name: string; date: string; bullets: bullet[] }[] = []
   let editMode: boolean = true
   let includingBullets: number = 0
@@ -45,8 +48,9 @@
     { name: 'Sa', show: true, id: 5 },
     { name: 'Su', show: true, id: 6 },
   ]
+  let triggeredByListIteration: boolean = false
 
-  window.api.onSendData(async (data) => {
+  window.api.onSendData(async (data, listname) => {
     data.forEach((day) => {
       day.bullets.forEach((bullet) => {
         bullet.ref = null
@@ -56,16 +60,26 @@
     dateStartOfWeek = dayjs(data[0].date)
     year = dateStartOfWeek.format('YYYY')
     month = dateStartOfWeek.format('MMMM')
+    list = listname
     await tick()
-    focusAndSetCaret(week[0].bullets[0].ref)
+    if (triggeredByListIteration) {
+      focusAndSetCaret(week[7].bullets[0].ref)
+      triggeredByListIteration = false
+    } else {
+      focusAndSetCaret(week[nextWeekdayID(-1)].bullets[0].ref)
+    }
+  })
+
+  window.api.onSendLists((data) => {
+    lists = data
   })
 
   window.api.onSendError((message) => {
     errorMessage = message
   })
 
-  function loadWeek(date: string) {
-    window.api.loadData(date)
+  function loadWeekAndList(date: string, list: string) {
+    window.api.loadData(date, list)
   }
 
   // somehow we can't track the previous week data to compare the previous
@@ -400,6 +414,18 @@
       .find((day) => day.id < id && day.show)
     return nextWeekday ? nextWeekday.id : 7
   }
+
+  function iterateList(date: string, list: string, step: number) {
+    const index = lists.indexOf(list)
+    let iterateIndex = index + step
+    if (iterateIndex === -1) {
+      iterateIndex = lists.length - 1
+    } else if (iterateIndex >= lists.length) {
+      iterateIndex = 0
+    }
+    triggeredByListIteration = true
+    loadWeekAndList(date, lists[iterateIndex])
+  }
 </script>
 
 <svelte:window
@@ -449,6 +475,15 @@
       </div>
       <div class="flex flex-1 justify-end gap-x-3 pr-3">
         <button
+          title="lists"
+          class="px-1"
+          on:click={() => {
+            showLists = !showLists
+          }}
+        >
+          L
+        </button>
+        <button
           title="weekday"
           class="px-1"
           on:click={() => {
@@ -461,22 +496,28 @@
           title="today"
           class="px-1"
           on:click={() =>
-            loadWeek(dayjs().startOf('isoWeek').format('YYYY-MM-DD'))}
-          >T</button
+            loadWeekAndList(
+              dayjs().startOf('isoWeek').format('YYYY-MM-DD'),
+              list
+            )}>T</button
         >
         <button
           title="previous week"
           class="px-1"
           on:click={() =>
-            loadWeek(dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD'))}
-          >P</button
+            loadWeekAndList(
+              dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD'),
+              list
+            )}>P</button
         >
         <button
           title="next week"
           class="px-1"
           on:click={() =>
-            loadWeek(dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD'))}
-          >N</button
+            loadWeekAndList(
+              dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD'),
+              list
+            )}>N</button
         >
         <button
           title="switch"
@@ -495,6 +536,23 @@
             on:click={() => {
               day.show = !day.show
             }}>{day.name}</button
+          >
+        {/each}
+      </div>
+    {/if}
+    {#if showLists}
+      <div class="flex self-end gap-x-1 pr-3 pt-2">
+        {#each lists as name (name)}
+          <button
+            class="px-1 rounded-[1px]"
+            class:bg-[#555555]={name == list}
+            class:text-[#f9f9f9]={name == list}
+            on:click={() => {
+              loadWeekAndList(
+                dayjs().startOf('isoWeek').format('YYYY-MM-DD'),
+                name
+              )
+            }}>{name}</button
           >
         {/each}
       </div>
@@ -518,7 +576,7 @@
       class:min-[900px]:max-w-[800px]={colorStyle == 1}
     >
       {#each week as day, i (day.name)}
-        {#if day.name === 'someday'}
+        {#if day.name === list}
           <div
             class="px-7 py-7 m-3 my-9 flex flex-col
           border-[2px] border-[#1d1a1a] rounded shadow-[0_3px_0_#1d1a1a]
@@ -526,7 +584,7 @@
             class:!border-none={colorStyle == 3}
             class:!shadow-none={colorStyle == 3}
           >
-            <div class="pb-3 text-xl"># someday</div>
+            <div class="pb-3 text-xl"># {list}</div>
             {#each day.bullets as bullet, j (bullet)}
               <Bullet
                 bind:bullet
@@ -545,14 +603,21 @@
                 on:moveBulletDown={(e) => moveBulletDown(e, i)}
                 on:storeBullet={(e) => storeBullet(e)}
                 on:previousWeek={() =>
-                  loadWeek(
-                    dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD')
+                  loadWeekAndList(
+                    dateStartOfWeek.subtract(1, 'week').format('YYYY-MM-DD'),
+                    list
                   )}
                 on:nextWeek={() =>
-                  loadWeek(
-                    dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD')
+                  loadWeekAndList(
+                    dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD'),
+                    list
                   )}
-                on:todayWeek={() => loadWeek(dateStartOfCurrentWeek)}
+                on:previousList={() =>
+                  iterateList(dateStartOfCurrentWeek, list, -1)}
+                on:nextList={() =>
+                  iterateList(dateStartOfCurrentWeek, list, 1)}
+                on:todayWeek={() =>
+                  loadWeekAndList(dateStartOfCurrentWeek, list)}
                 on:relaunch={() => window.api.relaunch()}
                 on:focusFirstBullet={() => focusFirstBullet()}
                 on:focusLastBullet={() => focusLastBullet()}
@@ -608,16 +673,23 @@
                     on:moveBulletDown={(e) => moveBulletDown(e, i)}
                     on:storeBullet={(e) => storeBullet(e)}
                     on:previousWeek={() =>
-                      loadWeek(
+                      loadWeekAndList(
                         dateStartOfWeek
                           .subtract(1, 'week')
-                          .format('YYYY-MM-DD')
+                          .format('YYYY-MM-DD'),
+                        list
                       )}
                     on:nextWeek={() =>
-                      loadWeek(
-                        dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD')
+                      loadWeekAndList(
+                        dateStartOfWeek.add(1, 'week').format('YYYY-MM-DD'),
+                        list
                       )}
-                    on:todayWeek={() => loadWeek(dateStartOfCurrentWeek)}
+                    on:previousList={() =>
+                      iterateList(dateStartOfCurrentWeek, list, -1)}
+                    on:nextList={() =>
+                      iterateList(dateStartOfCurrentWeek, list, 1)}
+                    on:todayWeek={() =>
+                      loadWeekAndList(dateStartOfCurrentWeek, list)}
                     on:relaunch={() => window.api.relaunch()}
                     on:focusFirstBullet={() => focusFirstBullet()}
                     on:focusLastBullet={() => focusLastBullet()}

@@ -71,7 +71,8 @@
   }
 
   function indentBullet() {
-    bullet.indent = Math.min(bullet.indent + 1, 2)
+    const maxIndent: number = 5
+    bullet.indent = Math.min(bullet.indent + 1, maxIndent)
   }
 
   function unindentBullet() {
@@ -192,10 +193,14 @@
       dispatch('moveBulletDown', { bulletID: bullet.id })
     } else if (e.key === 'k' && e.metaKey) {
       dispatch('moveBulletUp', { bulletID: bullet.id })
-    } else if (e.key === 'h' && e.metaKey) {
+    } else if (e.key === 'h' && e.metaKey && !e.shiftKey) {
       dispatch('previousWeek')
-    } else if (e.key === 'l' && e.metaKey) {
+    } else if (e.key === 'h' && e.metaKey && e.shiftKey) {
+      dispatch('previousList')
+    } else if (e.key === 'l' && e.metaKey && !e.shiftKey) {
       dispatch('nextWeek')
+    } else if (e.key === 'l' && e.metaKey && e.shiftKey) {
+      dispatch('nextList')
     } else if (e.key === 't' && e.metaKey) {
       dispatch('todayWeek')
     } else if (e.key === 'o' && e.metaKey) {

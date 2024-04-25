@@ -2,7 +2,11 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 const API = {
   onSendData: (callback) =>
-    ipcRenderer.on('on-send-data', (event, args) => {
+    ipcRenderer.on('on-send-data', (event, data, listname) => {
+      callback(data, listname)
+    }),
+  onSendLists: (callback) =>
+    ipcRenderer.on('on-send-lists', (event, args) => {
       callback(args)
     }),
   onSendError: (callback) =>
@@ -10,7 +14,7 @@ const API = {
       callback(args)
     }),
   saveData: (data) => ipcRenderer.send('save-data', data),
-  loadData: (date) => ipcRenderer.send('load-data', date),
+  loadData: (date, list) => ipcRenderer.send('load-data', date, list),
   relaunch: () => ipcRenderer.send('relaunch'),
 }
 

@@ -14,6 +14,7 @@ dayjs.extend(isoWeek)
 let mainWindow
 let tray
 const somedayFile = 'someday'
+const lists = ['someday', 'project', 'personal', 'work']
 
 function uuid() {
   return Math.random().toString(16).slice(2)
@@ -177,18 +178,21 @@ const createWindow = () => {
     const file = getFileName(startOfWeek)
     await createFile(path.join(dirPath, file), week)
 
-    const somedayDefaultData = {
-      name: 'someday',
-      date: null,
-      bullets: [{ id: uuid(), style: 'todo', text: '', indent: 0 }],
-    }
-    await createFile(path.join(dirPath, somedayFile), somedayDefaultData)
+    lists.forEach(async (list) => {
+      const listDefaultData = {
+        name: list,
+        date: null,
+        bullets: [{ id: uuid(), style: 'todo', text: '', indent: 0 }],
+      }
+      await createFile(path.join(dirPath, list), listDefaultData)
+    })
 
     let data = await readFile(path.join(dirPath, file))
-    const somedayData = await readFile(path.join(dirPath, somedayFile))
-    data.push(somedayData)
+    const listData = await readFile(path.join(dirPath, lists[0]))
+    data.push(listData)
     data = changeIndentFromBooleanToNumber(data)
-    mainWindow.webContents.send('on-send-data', data)
+    mainWindow.webContents.send('on-send-data', data, lists[0])
+    mainWindow.webContents.send('on-send-lists', lists)
   })
 }
 
@@ -250,15 +254,15 @@ ipcMain.on('save-data', (event, data) => {
     throw new Error(error)
   }
   const index = _.findIndex(data, function (x) {
-    return x.name === 'someday'
+    return lists.includes(x.name)
   })
-  someday = data.pop(index)
+  const list = data.pop(index)
   file = getFileName(dayjs(data[0].date))
   saveToFile(path.join(dirPath, file), data)
-  saveToFile(path.join(dirPath, somedayFile), someday)
+  saveToFile(path.join(dirPath, list.name), list)
 })
 
-ipcMain.on('load-data', async (event, date) => {
+ipcMain.on('load-data', async (event, date, list) => {
   // create file if it doesn't exist
   const startOfWeek = dayjs(date)
   const week = getDefaultWeek(startOfWeek)
@@ -266,10 +270,10 @@ ipcMain.on('load-data', async (event, date) => {
   await createFile(path.join(dirPath, file), week)
 
   let data = await readFile(path.join(dirPath, file))
-  const somedayData = await readFile(path.join(dirPath, somedayFile))
-  data.push(somedayData)
+  const listData = await readFile(path.join(dirPath, list))
+  data.push(listData)
   data = changeIndentFromBooleanToNumber(data)
-  mainWindow.webContents.send('on-send-data', data)
+  mainWindow.webContents.send('on-send-data', data, list)
 })
 
 ipcMain.on('relaunch', async (event) => {
