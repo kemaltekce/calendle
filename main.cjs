@@ -280,3 +280,11 @@ ipcMain.on('relaunch', async (event) => {
   app.relaunch()
   app.quit()
 })
+
+ipcMain.on('show-window', () => {
+  mainWindow.show()
+})
+
+ipcMain.on('show-time', (event, time) => {
+  tray.setTitle(time)
+})

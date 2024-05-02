@@ -6,6 +6,10 @@
   import Bullet from './lib/Bullet.svelte'
   import Error from './lib/Error.svelte'
   import Hotkey from './lib/Hotkey.svelte'
+  import TimerWorker from './timer.ts?worker'
+  import soundUrl from './assets/sound.mp3'
+  import backgroundSoundUrl from './assets/background.mp3'
+
   import { afterUpdate, tick } from 'svelte'
 
   dayjs.extend(isoWeek)
@@ -49,6 +53,27 @@
     { name: 'Su', show: true, id: 6 },
   ]
   let triggeredByListIteration: boolean = false
+  let showFocus: boolean = false
+  let timer: Worker = new TimerWorker()
+  let timerDisplay: string = ''
+  const audio = new Audio(soundUrl)
+  let focusSessions: number = 0
+  const audioLoop = new Audio(backgroundSoundUrl)
+  audioLoop.loop = true
+  audioLoop.volume = 0.3
+  let loopPlaying: boolean = false
+
+  timer.onmessage = (event) => {
+    if (event.data === 'done') {
+      audioLoop.pause()
+      audio.play()
+      window.api.showWindow()
+      focusSessions += 1
+      return
+    }
+    timerDisplay = event.data
+    window.api.showTime(event.data)
+  }
 
   window.api.onSendData(async (data, listname) => {
     data.forEach((day) => {
@@ -426,6 +451,51 @@
     triggeredByListIteration = true
     loadWeekAndList(date, lists[iterateIndex])
   }
+
+  function startTimer() {
+    timer.postMessage({ action: 'start', minutes: 0.52 })
+  }
+
+  function continueTimer() {
+    timer.postMessage({ action: 'continue' })
+  }
+
+  function pauseTimer() {
+    timer.postMessage({ action: 'pause' })
+  }
+
+  function deleteTimer() {
+    timer.postMessage({ action: 'delete' })
+  }
+
+  function triggerTimer(event: any) {
+    switch (event.detail.action) {
+      case 'start':
+        startTimer()
+        break
+      case 'pause':
+        pauseTimer()
+        break
+      case 'continue':
+        continueTimer()
+        break
+      case 'delete':
+        deleteTimer()
+        break
+      case 'clear':
+        focusSessions = 0
+        break
+    }
+  }
+
+  function loopMusic() {
+    if (loopPlaying) {
+      audioLoop.pause()
+    } else {
+      audioLoop.play()
+    }
+    loopPlaying = !loopPlaying
+  }
 </script>
 
 <svelte:window
@@ -460,20 +530,38 @@
         >
           {month + '/' + year}
         </button>
-        <div
-          class="w-[1rem] text-[#C4C4C4]"
-          class:invisible={includingBullets === 0}
-        >
-          {includingBullets}
+        {#if includingBullets}
+          <div class="text-[#C4C4C4]" class:invisible={includingBullets === 0}>
+            {includingBullets}
+          </div>
+        {/if}
+        {#if displayEscHint}
+          <div
+            class="bg-[#E5C4C4] text-center"
+            class:invisible={!displayEscHint}
+          >
+            esc
+          </div>
+        {/if}
+        <div>
+          {timerDisplay}
         </div>
-        <div
-          class="w-[2rem] bg-[#E5C4C4] text-center"
-          class:invisible={!displayEscHint}
-        >
-          esc
+        <div class="flex gap-x-2" title="focus sessions">
+          {#each { length: focusSessions } as _}
+            <div class="">&#x25C6</div>
+          {/each}
         </div>
       </div>
       <div class="flex flex-1 justify-end gap-x-3 pr-3">
+        <button
+          title="focus"
+          class="px-1"
+          on:click={() => {
+            showFocus = !showFocus
+          }}
+        >
+          F
+        </button>
         <button
           title="lists"
           class="px-1"
@@ -519,10 +607,13 @@
               list
             )}>N</button
         >
-        <button
+        <!-- <button
           title="switch"
           class="px-1"
           on:click={() => window.api.relaunch()}>S</button
+        > -->
+        <button title="switch" class="px-1" on:click={() => loopMusic()}
+          >M</button
         >
       </div>
     </div>
@@ -555,6 +646,24 @@
             }}>{name}</button
           >
         {/each}
+      </div>
+    {/if}
+    {#if showFocus}
+      <div class="flex self-end pr-3 pt-2 gap-x-3">
+        <button class="hover:underline" on:click={startTimer}>start</button>
+        <button class="hover:underline" on:click={pauseTimer}>pause</button>
+        <button class="hover:underline" on:click={continueTimer}
+          >continue</button
+        >
+        <button class="hover:underline" on:click={deleteTimer}>delete</button>
+      </div>
+      <div class="flex self-end pr-3 pt-2">
+        <button
+          class="hover:underline"
+          on:click={() => {
+            focusSessions = 0
+          }}>clear focus sessions</button
+        >
       </div>
     {/if}
   </div>
@@ -625,6 +734,8 @@
                 on:blurBullet={() => blurBullet()}
                 on:displayEscHint={() => (displayEscHint = true)}
                 on:disableEscHint={() => (displayEscHint = false)}
+                on:triggerTimer={(e) => triggerTimer(e)}
+                on:loopMusic={() => loopMusic()}
               />
             {/each}
           </div>
@@ -697,6 +808,8 @@
                     on:blurBullet={() => blurBullet()}
                     on:displayEscHint={() => (displayEscHint = true)}
                     on:disableEscHint={() => (displayEscHint = false)}
+                    on:triggerTimer={(e) => triggerTimer(e)}
+                    on:loopMusic={() => loopMusic()}
                   />
                 {/each}
               </div>

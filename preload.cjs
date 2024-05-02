@@ -16,6 +16,8 @@ const API = {
   saveData: (data) => ipcRenderer.send('save-data', data),
   loadData: (date, list) => ipcRenderer.send('load-data', date, list),
   relaunch: () => ipcRenderer.send('relaunch'),
+  showWindow: () => ipcRenderer.send('show-window'),
+  showTime: (time) => ipcRenderer.send('show-time', time),
 }
 
 contextBridge.exposeInMainWorld('api', API)

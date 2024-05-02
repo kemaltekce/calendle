@@ -160,6 +160,15 @@
       e.preventDefault()
       iterateStyle()
     } else if (e.key === 'Enter') {
+      // check if timer cmd is used if not run default by adding bullet
+      const regex = /^timer\s+(\w+)/
+      const match = bullet.text.match(regex)
+      if (match) {
+        e.preventDefault()
+        dispatch('triggerTimer', { action: match[1] })
+        bullet.text = ''
+        return
+      }
       e.preventDefault()
       dispatch('addBullet', {
         bulletID: bullet.id,
@@ -203,8 +212,10 @@
       dispatch('nextList')
     } else if (e.key === 't' && e.metaKey) {
       dispatch('todayWeek')
-    } else if (e.key === 'o' && e.metaKey) {
-      dispatch('relaunch')
+      // } else if (e.key === 'o' && e.metaKey) {
+      //   dispatch('relaunch')
+    } else if (e.key === 'm' && e.metaKey) {
+      dispatch('loopMusic')
     } else if (e.key === 'Tab' && e.shiftKey) {
       e.preventDefault()
       unindentBullet()
