@@ -453,7 +453,7 @@
   }
 
   function startTimer() {
-    timer.postMessage({ action: 'start', minutes: 0.52 })
+    timer.postMessage({ action: 'start', minutes: 52 })
   }
 
   function continueTimer() {
