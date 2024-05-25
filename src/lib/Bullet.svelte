@@ -34,6 +34,7 @@
     note: style
     noteGrey: style
     header: style
+    empty: style
   } = {
     todo: { icon: '&#x25AA', crossed: false, grey: false },
     focus: { icon: '&#x25C6;', crossed: false, grey: false },
@@ -44,17 +45,19 @@
     note: { icon: '&#8211;', crossed: false, grey: false },
     noteGrey: { icon: '&#8211;', crossed: false, grey: true },
     header: { icon: '#', crossed: false, grey: false },
+    empty: { icon: '&nbsp;', crossed: false, grey: false },
   }
   const bulletPriority: string[] = [
     'todo',
     'focus',
     'done',
     'doneUnfinished',
-    'migrate',
-    'someday',
+    // 'migrate',
+    // 'someday',
     'note',
     'noteGrey',
     'header',
+    'empty',
   ]
   let isFocused: boolean = false
 
@@ -235,7 +238,9 @@
   {/each}
   <button
     contenteditable="false"
-    class:hidden={(!isFocused && bullet.text == '---' && !highlight) ||
+    class:hidden={(!isFocused &&
+      bullet.text.startsWith('---') &&
+      !highlight) ||
       (!isFocused && bullet.style == 'header' && !highlight)}
     bind:innerHTML={bulletStyle[bullet.style].icon}
     on:mousedown={() => iterateStyle()}
@@ -248,11 +253,22 @@
     class:decoration-1={bulletStyle[bullet.style].crossed}
     class:caret-[#1d1a1a00]={!editMode}
     class:focus:bg-[#C4C4C450]={!editMode}
-    class:text-[#00000000]={!isFocused && bullet.text == '---' && !highlight}
-    class:bg-[#C4C4C4]={!isFocused && bullet.text == '---' && !highlight}
-    class:h-[2px]={!isFocused && bullet.text == '---' && !highlight}
-    class:my-[11px]={!isFocused && bullet.text == '---' && !highlight}
-    class:self-center={!isFocused && bullet.text == '---' && !highlight}
+    class:text-[#00000000]={!isFocused &&
+      bullet.text.startsWith('---') &&
+      !highlight}
+    class:bg-[#C4C4C4]={!isFocused &&
+      bullet.text.startsWith('---') &&
+      bullet.text.length === 3 &&
+      !highlight}
+    class:bg-[#1d1a1a90]={!isFocused &&
+      bullet.text.startsWith('---') &&
+      bullet.text.length > 3 &&
+      !highlight}
+    class:h-[2px]={!isFocused && bullet.text.startsWith('---') && !highlight}
+    class:my-[11px]={!isFocused && bullet.text.startsWith('---') && !highlight}
+    class:self-center={!isFocused &&
+      bullet.text.startsWith('---') &&
+      !highlight}
     class:text-xl={!isFocused && bullet.style == 'header' && !highlight}
     class:px-0={!isFocused && bullet.style == 'header' && !highlight}
     class:bg-[#C4C4C450]={highlight}
@@ -273,6 +289,9 @@
       dispatch('blurBullet')
     }}
   />
+  {#if bullet.text.startsWith('---') && !isFocused}
+    <div class="text-[#1d1a1a]">{bullet.text.slice(3)}</div>
+  {/if}
 </div>
 
 <style>

@@ -290,10 +290,8 @@
       weekIndex = nextWeekdayID(weekIndex)
       el = week[weekIndex].bullets[0].ref
       focusAndSetCaret(el)
-    }
-
-    // scroll to bottom if last bullet
-    if (weekIndex === 7 && previousBulletIndex === bullets.length) {
+    } else if (weekIndex === 7 && previousBulletIndex === bullets.length) {
+      // scroll to bottom if last bullet
       const mainDiv = document.getElementById('main')
       mainDiv.scrollTo(0, mainDiv.scrollHeight)
     }
